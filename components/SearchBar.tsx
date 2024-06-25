@@ -3,9 +3,10 @@ import React,{useState} from 'react'
 import SearchManufacturer from './SearchManufacturer'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { PageProps } from '@/types'
 
 
-const SearchBar = ({setManufacturer,setModel}) => {
+const SearchBar = ({setManufacturer,setModel}:PageProps) => {
     const [searchManufacturer, setSearchManufacturer] = useState('');
     const Router=useRouter()
     const [searchModel, setSearchModel] = useState('');

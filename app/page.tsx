@@ -7,9 +7,7 @@ import Hero from "@/components/Hero";
 import SearchBar from "@/components/SearchBar";
 import ShowMore from "@/components/ShowMore";
 import { fuels, yearsOfProduction } from "@/constants";
-import { HomeProps } from "@/types";
 import { fetchCars } from "@/utils";
-import Image from "next/image";
 import { useState, useEffect } from "react";
 
 export default function Home() {
@@ -77,15 +75,17 @@ export default function Home() {
 							))}
 						</div>
 						{loading && (
-							<div className="mt-16 w-full flex-center">
-								<Image
-								src="/loader.svg"
-								alt="loader"
-								width={50}
-								height={50}
-								className="object-contain"
-								/>
-							</div>
+							// <div className="mt-16 w-full flex-center">
+							// 	<Image
+							// 	src="/loader.svg"
+							// 	alt="loader"
+							// 	width={50}
+							// 	height={50}
+							// 	className="object-contain"
+							// 	/>
+							// </div>
+							// <BeatLoader/>
+							<p>Cars are loading.Please Wait</p>
 						)}
 						<ShowMore
 							pageNumber={limit / 10}
@@ -96,7 +96,6 @@ export default function Home() {
 				) : (
 					<div className="home__error-container">
 						<h2 className="text-black text-xl font-bold">Oops,No Results</h2>
-						<p>{allCars?.message}</p>
 					</div>
 				)}
 			</div>
