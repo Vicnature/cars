@@ -62,3 +62,16 @@ export interface PageProps {
     setManufacturer:any,
     setModel:any
   }
+
+  export interface Order {
+  _id: string;
+  customerName: string;
+  contact: string;
+  quantity: number;
+  location: string;
+  createdAt: string;
+  part?: {
+    _id: string;
+    title: string;
+  };
+}

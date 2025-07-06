@@ -3,68 +3,138 @@
 import { useState, useEffect } from "react";
 import { fetchSpareParts } from "@/utils/fetchSpareParts";
 import PartCard from "@/components/PartCard";
+import CustomButton from "@/components/CustomButton";
 
-export default function Home() {
-  const [allParts, setAllParts] = useState([]);
+export default function Page() {
+  const [parts, setParts] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState({
+    brand: "",
+    category: "",
+    model: "",
+    priceMin: "",
+    priceMax: "",
+    search: "",
+  });
+  const [limit, setLimit] = useState(6);
 
   const getParts = async () => {
     setLoading(true);
     try {
-      const parts = await fetchSpareParts({ search: searchTerm });
-      setAllParts(parts);
+      const results = await fetchSpareParts({
+        ...filters,
+        priceMin: filters.priceMin ? Number(filters.priceMin) : undefined,
+        priceMax: filters.priceMax ? Number(filters.priceMax) : undefined,
+        limit,
+      });
+      setParts(results || []);
     } catch (error) {
-      console.error("Failed to fetch parts:", error);
+      console.error("Error fetching parts:", error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    const delayDebounce = setTimeout(() => {
-      getParts();
-    }, 500); // debounce search input
-    return () => clearTimeout(delayDebounce);
-  }, [searchTerm]);
+    getParts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters, limit]);
 
-  const isDataEmpty = !Array.isArray(allParts) || allParts.length < 1;
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFilters((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    getParts();
+  };
 
   return (
-    <main className="overflow-hidden">
-      <div className="mt-12 px-6 sm:px-12 max-w-screen-xl mx-auto" id="discover">
-        <div className="mb-8 text-center">
-          <h1 className="text-4xl font-extrabold text-gray-800">Garage Spare Parts Catalogue</h1>
-          <p className="text-gray-500 mt-2">Search for spare parts by brand, model or title</p>
-        </div>
-
-        {/* 🔍 Search Bar */}
-        <div className="mb-10 flex justify-center">
-          <input
-            type="text"
-            placeholder="Search parts..."
-            className="w-full max-w-md border border-gray-300 rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-
-        {loading ? (
-          <p className="text-center text-gray-600">Loading spare parts, please wait...</p>
-        ) : isDataEmpty ? (
-          <div className="text-center">
-            <h2 className="text-black text-xl font-bold">Oops, No Results</h2>
-          </div>
-        ) : (
-          <section>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {allParts.map((part) => (
-                <PartCard key={part._id} part={part} />
-              ))}
-            </div>
-          </section>
-        )}
+    <main className="overflow-hidden px-4 py-10 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="mb-8 text-center">
+        <h1 className="text-4xl font-extrabold text-gray-900">Spare Parts Catalogue</h1>
+        <p className="text-gray-600">Find and order spare parts from Garage Kenya</p>
       </div>
+
+      {/* Search & Filters */}
+      <form onSubmit={handleSearchSubmit} className="grid md:grid-cols-3 gap-4 mb-8">
+        <input
+          name="search"
+          type="text"
+          placeholder="Search by title..."
+          value={filters.search}
+          onChange={handleInputChange}
+          className="border border-gray-300 rounded-md p-2"
+        />
+
+        <select name="brand" value={filters.brand} onChange={handleInputChange} className="border border-gray-300 rounded-md p-2">
+          <option value="">All Brands</option>
+          <option value="Toyota">Toyota</option>
+          <option value="Subaru">Subaru</option>
+          <option value="Nissan">Nissan</option>
+        </select>
+
+        <select name="category" value={filters.category} onChange={handleInputChange} className="border border-gray-300 rounded-md p-2">
+          <option value="">All Categories</option>
+          <option value="Engine">Engine</option>
+          <option value="Body">Body</option>
+          <option value="Electrical">Electrical</option>
+        </select>
+
+        <select name="model" value={filters.model} onChange={handleInputChange} className="border border-gray-300 rounded-md p-2">
+          <option value="">All Models</option>
+          <option value="Corolla">Corolla</option>
+          <option value="Forester">Forester</option>
+          <option value="March">March</option>
+        </select>
+
+        <input
+          name="priceMin"
+          type="number"
+          placeholder="Min Price"
+          value={filters.priceMin}
+          onChange={handleInputChange}
+          className="border border-gray-300 rounded-md p-2"
+        />
+        <input
+          name="priceMax"
+          type="number"
+          placeholder="Max Price"
+          value={filters.priceMax}
+          onChange={handleInputChange}
+          className="border border-gray-300 rounded-md p-2"
+        />
+      </form>
+
+      {/* Results */}
+      {loading ? (
+        <p className="text-center text-gray-500">Loading spare parts...</p>
+      ) : parts.length === 0 ? (
+        <div className="text-center mt-10">
+          <h2 className="text-xl font-semibold text-gray-700">No parts found</h2>
+          <p className="text-gray-500">Try adjusting your filters.</p>
+        </div>
+      ) : (
+        <section>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {parts.map((part: any) => (
+              <PartCard key={part._id} part={part} />
+            ))}
+          </div>
+
+          {/* Load More */}
+          <div className="text-center mt-8">
+            <CustomButton
+              title="Load More"
+              btnType="button"
+              containerStyles="bg-primary-blue text-white px-6 py-3 rounded-md hover:bg-blue-700 font-semibold"
+              handleClick={() => setLimit((prev) => prev + 6)}
+            />
+          </div>
+        </section>
+      )}
     </main>
   );
 }

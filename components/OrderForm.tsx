@@ -15,8 +15,8 @@ interface OrderFormProps {
 const OrderForm = ({ partId, partTitle, isOpen, onClose }: OrderFormProps) => {
   const [form, setForm] = useState({
     name: "",
-    email: "",
     phone: "",
+    email: "",
     address: "",
     quantity: 1,
   });
@@ -37,27 +37,20 @@ const OrderForm = ({ partId, partTitle, isOpen, onClose }: OrderFormProps) => {
     setSuccessMessage("");
 
     try {
-await writeClient.create({
-  _type: "order",
-  part: { _type: "reference", _ref: partId },
-  customerName: form.name,
-  contact: form.phone || form.email,
-  location: form.address,
-  quantity: form.quantity,
-});
+      await writeClient.create({
+        _type: "order",
+        part: { _type: "reference", _ref: partId },
+        customerName: form.name,
+        contact: form.email || form.phone,
+        quantity: form.quantity,
+        location: form.address,
+      });
 
-
-      setSuccessMessage(
-        "Thank you! Your order has been submitted. A Carhub representative will contact you to arrange delivery."
-      );
-      setTimeout(() => {
-  onClose();
-}, 3000);
-
-      setForm({ name: "", email: "", phone: "", address: "", quantity: 1 });
+      setSuccessMessage("✅ Order submitted! A Carhub rep will contact you soon.");
+      setForm({ name: "", phone: "", email: "", address: "", quantity: 1 });
     } catch (err) {
-      console.error("Order submission failed:", err);
-      setSuccessMessage("Something went wrong. Please try again.");
+      console.error("Order failed:", err);
+      setSuccessMessage("❌ Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -129,20 +122,6 @@ await writeClient.create({
 
                     <div className="space-y-2">
                       <label className="block text-sm font-medium text-gray-700">
-                        Email
-                      </label>
-                      <input
-                        type="email"
-                        name="email"
-                        required
-                        className="w-full rounded-md border-gray-300 shadow-sm focus:ring-primary-blue focus:border-primary-blue p-2"
-                        value={form.email}
-                        onChange={handleChange}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700">
                         Phone
                       </label>
                       <input
@@ -151,6 +130,20 @@ await writeClient.create({
                         required
                         className="w-full rounded-md border-gray-300 shadow-sm focus:ring-primary-blue focus:border-primary-blue p-2"
                         value={form.phone}
+                        onChange={handleChange}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        name="email"
+                        required
+                        className="w-full rounded-md border-gray-300 shadow-sm focus:ring-primary-blue focus:border-primary-blue p-2"
+                        value={form.email}
                         onChange={handleChange}
                       />
                     </div>
