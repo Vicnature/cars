@@ -50,6 +50,10 @@ await writeClient.create({
       setSuccessMessage(
         "Thank you! Your order has been submitted. A Carhub representative will contact you to arrange delivery."
       );
+      setTimeout(() => {
+  onClose();
+}, 3000);
+
       setForm({ name: "", email: "", phone: "", address: "", quantity: 1 });
     } catch (err) {
       console.error("Order submission failed:", err);
