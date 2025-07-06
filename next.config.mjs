@@ -1,11 +1,22 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    images:{
-        domains:['cdn.imagin.studio']
-    },
-    typescript:{
-        ignoreBuildErrors:true
-    }
-};
+  experimental: {
+    serverActions: true, // React 19
+  },
+  images: {
+    domains: ['cdn.imagin.studio'],
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  async rewrites() {
+    return [
+      {
+        source: '/studio/:path*',
+        destination: '/studio/[[...index]]',
+      },
+    ]
+  },
+}
 
-export default nextConfig;
+export default nextConfig

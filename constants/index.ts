@@ -20,6 +20,7 @@ export const manufacturers = [
 	"Honda",
 	"Hyundai",
 	"Infiniti",
+	"Isuzu",
 	"Jaguar",
 	"Jeep",
 	"Kia",
