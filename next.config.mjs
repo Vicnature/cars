@@ -4,7 +4,7 @@ const nextConfig = {
     serverActions: true, // React 19
   },
   images: {
-    domains: ['cdn.imagin.studio'],
+    domains: ['cdn.imagin.studio', 'cdn.sanity.io'], // 👈 Add this
   },
   typescript: {
     ignoreBuildErrors: true,
@@ -15,8 +15,8 @@ const nextConfig = {
         source: '/studio/:path*',
         destination: '/studio/[[...index]]',
       },
-    ]
+    ];
   },
-}
+};
 
-export default nextConfig
+export default nextConfig;

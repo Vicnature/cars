@@ -1,104 +1,105 @@
-/** @format */
 "use client";
 
-import CarCard from "@/components/CarCard";
-import CustomFilter from "@/components/CustomFilter";
-import Hero from "@/components/Hero";
-import SearchBar from "@/components/SearchBar";
-import ShowMore from "@/components/ShowMore";
-import { fuels, yearsOfProduction } from "@/constants";
-import { fetchCars } from "@/utils";
 import { useState, useEffect } from "react";
+import { fetchSpareParts } from "@/utils/fetchSpareParts";
+import CustomButton from "@/components/CustomButton";
+import PartCard from "@/components/PartCard";
 
 export default function Home() {
-	// fetch all cars
-	const [allCars, setAllCars] = useState([]);
-	const [loading, setLoading] = useState(false);
-	const [manufacturer, setManufacturer] = useState();
-	const [model, setModel] = useState();
-	const [filter, setFilter] = useState();
-	const [year, setYear] = useState(2024);
-	const [limit, setLimit] = useState(10);
-	const [fuel, setFuel] = useState('');
+  const [allParts, setAllParts] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-	const getCars=async()=>{
-		setLoading(true)
-		try {
-			const result = await fetchCars({
-				manufacturer: manufacturer || "",
-				year: year || 2024,
-				fuel: fuel || "",
-				limit: limit || 10,
-				model: model || ""
+  const getParts = async () => {
+    setLoading(true);
+    try {
+      const parts = await fetchSpareParts();
+      setAllParts(parts);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-			});
-			setAllCars(result)
-		} catch (error) {
-			console.log(error);
-			
-		}finally{
-			setLoading(false);
-		}
-		};
-	
-	useEffect(() => {
-		getCars();
-	}, [fuel, limit, year, manufacturer, model]);
+  useEffect(() => {
+    getParts();
+  }, []);
 
-	const isDataEmpty = !Array.isArray(allCars) || allCars.length < 1 || !allCars; //check if no cars were returned
+  const isDataEmpty = !Array.isArray(allParts) || allParts.length < 1;
 
-	return (
-		<main className="overflow-hidden">
-			{/* hero section */}
-			<Hero />
-			<div className="mt-12 padding-x padding-y max-width" id="discover">
-				<div className="home__text-container">
-					<h1 className="text-4xl font-extrabold">Garage Catalogue</h1>
-					<p>Cars we have fixed</p>
-				</div>
+  return (
+    <main className="overflow-hidden">
+      <div className="mt-12 padding-x padding-y max-width" id="discover">
+        <div className="home__text-container">
+          <h1 className="text-4xl font-extrabold">Garage Spare Parts Catalogue</h1>
+          <p>Spare parts available at Garage Kenya</p>
+        </div>
 
-				<div className="home__filters">
-					<SearchBar setManufacturer={setManufacturer} setModel={setModel} />
+        {/* You can add filters/search here if you want */}
 
-					<div className="home__filter-container">
-						<CustomFilter setFilter={setFuel} title="fuel" options={fuels} />
-						<CustomFilter setFilter={setYear} title="year" options={yearsOfProduction} />
-					</div>
-				</div>
+        {isDataEmpty ? (
+          <div className="home__error-container">
+            <h2 className="text-black text-xl font-bold">Oops, No Results</h2>
+          </div>
+        ) : (
+          <section>
+            <div className="home__cars-wrapper">
+              {allParts.map((part) => (
+                <PartCard key={part._id} part={part} />
+              ))}
+            </div>
+            {loading && <p>Loading spare parts, please wait...</p>}
+          </section>
+        )}
+      </div>
+    </main>
+  );
+}
 
-				{/* display cars from the car ninjas api */}
-				{allCars.length>0 ? (
-					<section>
-						<div className="home__cars-wrapper">
-							{allCars?.map((car) => (
-								<CarCard car={car} />
-							))}
-						</div>
-						{loading && (
-							// <div className="mt-16 w-full flex-center">
-							// 	<Image
-							// 	src="/loader.svg"
-							// 	alt="loader"
-							// 	width={50}
-							// 	height={50}
-							// 	className="object-contain"
-							// 	/>
-							// </div>
-							// <BeatLoader/>
-							<p>Cars are loading.Please Wait</p>
-						)}
-						<ShowMore
-							pageNumber={limit / 10}
-							isNext={limit> allCars.length}
-							setLimit={setLimit}
-						/>
-					</section>
-				) : (
-					<div className="home__error-container">
-						<h2 className="text-black text-xl font-bold">Oops,No Results</h2>
-					</div>
-				)}
-			</div>
-		</main>
-	);
-};
+// Minimal PartCard component to show spare parts info
+// function PartCard({ part }) {
+//   return (
+//     <div className="car-card group">
+//       <div className="car-card__content">
+//         <h2 className="car-card__content-title">{part.title}</h2>
+//       </div>
+//       <p className="flex mt-6 text-[32px] font-extrabold">
+//         <span className="self-start text-[14px] font-semibold">KES</span>
+//         {part.price}
+//       </p>
+
+//       <div className="relative w-full h-40 my-3 object-contain">
+//         {part.images?.[0] ? (
+//           <img
+//             src={part.images[0]}
+//             alt={part.title}
+//             className="object-contain w-full h-full"
+//           />
+//         ) : (
+//           <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+//             <span>No image</span>
+//           </div>
+//         )}
+//       </div>
+
+//       <p className="text-gray-600">{part.description}</p>
+//       <p className="mt-2 font-semibold">
+//         Brand: {part.brand} | Model: {part.model} | Category: {part.category}
+//       </p>
+//       <p className="mt-1">
+//         {part.inStock ? (
+//           <span className="text-green-600 font-semibold">In Stock</span>
+//         ) : (
+//           <span className="text-red-600 font-semibold">Out of Stock</span>
+//         )}
+//       </p>
+
+//       <CustomButton
+//         title="Order Now"
+//         containerStyles="w-full py-[16px] rounded-full bg-primary-blue mt-4"
+//         textStyles="text-white font-bold"
+//         handleClick={() => alert(`Order placed for ${part.title}!`)}
+//       />
+//     </div>
+//   );
+// }
