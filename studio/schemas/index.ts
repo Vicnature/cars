@@ -1,6 +1,7 @@
-import sparePart from './sparePart'
-import brand from './brand'
-import carModel from './model'
-import category from './category'
+import sparePart from './sparePart';
+import brand from './brand';
+import model from './model';
+import category from './category';
+import order from './order';
 
-export const schemaTypes = [sparePart, brand, carModel, category]
+export const schemaTypes = [sparePart, brand, model, category, order];

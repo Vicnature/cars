@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import CustomButton from "./CustomButton";
+import OrderForm from "./OrderForm";
 
 interface PartCardProps {
   part: {
@@ -20,6 +21,7 @@ interface PartCardProps {
 
 const PartCard = ({ part }: PartCardProps) => {
   const { title, price, description, brand, model, category, inStock, images } = part;
+  const [openModal, setOpenModal] = useState(false); 
 
   return (
     <div className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition duration-300 overflow-hidden flex flex-col">
@@ -89,16 +91,21 @@ const PartCard = ({ part }: PartCardProps) => {
         <div className="pt-3">
           <CustomButton
             title="Order Now"
-            btnType="button"
-            containerStyles={`w-full py-3 rounded-full font-medium text-sm transition text-white ${
-              inStock
-                ? "bg-primary-blue hover:bg-blue-800"
-                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+            containerStyles={`w-full py-3 rounded-full text-white font-bold ${
+              part.inStock ? "bg-primary-blue hover:bg-blue-700" : "bg-gray-400 cursor-not-allowed"
             }`}
             handleClick={() => {
-              if (!inStock) return;
-              alert(`Order placed for ${title}`);
+              if (!part.inStock) return;
+              setOpenModal(true);
             }}
+            btnType="button"
+          />
+
+          <OrderForm
+            partId={part._id}
+            partTitle={part.title}
+            isOpen={openModal}
+            onClose={() => setOpenModal(false)}
           />
         </div>
       </div>
