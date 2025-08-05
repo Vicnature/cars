@@ -1,9 +1,12 @@
+/** @format */
+
 "use client";
 
-import React, { Fragment, useState } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import Image from "next/image";
 import { writeClient } from "@/lib/sanity.write";
+import { sanityClient } from "@/lib/sanity.client";
+import { useSession } from "next-auth/react";
 
 interface OrderFormProps {
   partId: string;
@@ -13,22 +16,41 @@ interface OrderFormProps {
 }
 
 const OrderForm = ({ partId, partTitle, isOpen, onClose }: OrderFormProps) => {
+  const { data: session } = useSession();
+
   const [form, setForm] = useState({
     name: "",
     phone: "",
     email: "",
     address: "",
     quantity: 1,
+    paymentToken: ""
   });
 
+  const [paymentSteps, setPaymentSteps] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  useEffect(() => {
+    if (session?.user) {
+      setForm(prev => ({
+        ...prev,
+        name: session.user.name || "",
+        email: session.user.email || ""
+      }));
+    }
+  }, [session]);
+
+  useEffect(() => {
+    sanityClient
+      .fetch('*[_type=="paymentInstructions"][0].instructions')
+      .then(setPaymentSteps)
+      .catch(console.error);
+  }, []);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,25 +64,35 @@ const OrderForm = ({ partId, partTitle, isOpen, onClose }: OrderFormProps) => {
         part: { _type: "reference", _ref: partId },
         customerName: form.name,
         contact: form.email || form.phone,
+        email: form.email,
+        phone: form.phone,
         quantity: form.quantity,
         location: form.address,
+        status: "processing",
+        paymentStatus: "pending",
+        paymentToken: form.paymentToken,
+        createdAt: new Date().toISOString()
       });
-
-      setSuccessMessage("✅ Order submitted! A Carhub rep will contact you soon.");
-      setForm({ name: "", phone: "", email: "", address: "", quantity: 1 });
-    } catch (err) {
-      console.error("Order failed:", err);
-      setSuccessMessage("❌ Something went wrong. Please try again.");
+      setSuccessMessage("Order submitted! Please await dispatch.");
+      setForm({
+        name: session?.user?.name || "",
+        phone: "",
+        email: session?.user?.email || "",
+        address: "",
+        quantity: 1,
+        paymentToken: ""
+      });
+    } catch {
+      setSuccessMessage("Something went wrong. Try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <Transition appear show={isOpen} as={Fragment}>
+    <Transition show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
         <Transition.Child
-          as={Fragment}
           enter="ease-out duration-300"
           enterFrom="opacity-0"
           enterTo="opacity-100"
@@ -71,128 +103,128 @@ const OrderForm = ({ partId, partTitle, isOpen, onClose }: OrderFormProps) => {
           <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
         </Transition.Child>
 
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
-            >
-              <Dialog.Panel className="w-full max-w-lg transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all space-y-6">
-                <div className="flex justify-between items-center">
-                  <Dialog.Title
-                    as="h3"
-                    className="text-lg font-bold text-gray-800"
-                  >
-                    Order: {partTitle}
-                  </Dialog.Title>
-                  <button onClick={onClose}>
-                    <Image
-                      src="/close.svg"
-                      alt="Close"
-                      width={20}
-                      height={20}
-                    />
-                  </button>
-                </div>
+        <div className="fixed inset-0 overflow-y-auto flex justify-center p-4 text-center">
+          <Transition.Child
+            enter="ease-out duration-300"
+            enterFrom="opacity-0 scale-95"
+            enterTo="opacity-100 scale-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100 scale-100"
+            leaveTo="opacity-0 scale-95"
+          >
+            <Dialog.Panel className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-xl text-left max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <Dialog.Title className="text-xl font-bold text-gray-800">
+                  Place Order – <span className="text-primary-blue">{partTitle}</span>
+                </Dialog.Title>
+                <button
+                  onClick={onClose}
+                  className="text-gray-500 hover:text-gray-800 text-xl"
+                >
+                  ✕
+                </button>
+              </div>
 
-                {successMessage ? (
-                  <div className="text-green-600 text-sm font-medium leading-relaxed">
-                    {successMessage}
-                  </div>
-                ) : (
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Name
-                      </label>
+              {successMessage ? (
+                <div className="text-green-600 font-medium">{successMessage}</div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Full Name</label>
                       <input
                         type="text"
                         name="name"
-                        required
-                        className="w-full rounded-md border-gray-300 shadow-sm focus:ring-primary-blue focus:border-primary-blue p-2"
                         value={form.name}
                         onChange={handleChange}
+                        required
+                        className="mt-1 w-full border rounded px-3 py-2"
                       />
                     </div>
-
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Phone
-                      </label>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Phone Number</label>
                       <input
-                        type="tel"
+                        type="text"
                         name="phone"
-                        required
-                        className="w-full rounded-md border-gray-300 shadow-sm focus:ring-primary-blue focus:border-primary-blue p-2"
                         value={form.phone}
                         onChange={handleChange}
+                        required
+                        className="mt-1 w-full border rounded px-3 py-2"
                       />
                     </div>
-
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Email
-                      </label>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Email</label>
                       <input
                         type="email"
                         name="email"
-                        required
-                        className="w-full rounded-md border-gray-300 shadow-sm focus:ring-primary-blue focus:border-primary-blue p-2"
                         value={form.email}
                         onChange={handleChange}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Location
-                      </label>
-                      <input
-                        name="address"
-                        type="text"
                         required
-                        className="w-full rounded-md border-gray-300 shadow-sm focus:ring-primary-blue focus:border-primary-blue p-2"
-                        value={form.address}
-                        onChange={handleChange}
+                        className="mt-1 w-full border rounded px-3 py-2"
                       />
                     </div>
-
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Quantity
-                      </label>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Quantity</label>
                       <input
                         type="number"
                         name="quantity"
-                        min={1}
-                        required
-                        className="w-full rounded-md border-gray-300 shadow-sm focus:ring-primary-blue focus:border-primary-blue p-2"
                         value={form.quantity}
                         onChange={handleChange}
+                        min={1}
+                        required
+                        className="mt-1 w-full border rounded px-3 py-2"
                       />
                     </div>
-
-                    <div className="pt-4">
-                      <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className={`w-full bg-primary-blue text-white font-semibold py-3 rounded-md transition ${
-                          isSubmitting ? "opacity-70 cursor-not-allowed" : "hover:bg-blue-700"
-                        }`}
-                      >
-                        {isSubmitting ? "Submitting..." : "Submit Order"}
-                      </button>
+                    <div className="col-span-1 sm:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700">Shipping Location</label>
+                      <input
+                        type="text"
+                        name="address"
+                        value={form.address}
+                        onChange={handleChange}
+                        required
+                        className="mt-1 w-full border rounded px-3 py-2"
+                      />
                     </div>
-                  </form>
-                )}
-              </Dialog.Panel>
-            </Transition.Child>
-          </div>
+                    <div className="col-span-1 sm:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700">Payment Token</label>
+                      <input
+                        type="text"
+                        name="paymentToken"
+                        value={form.paymentToken}
+                        onChange={handleChange}
+                        required
+                        className="mt-1 w-full border rounded px-3 py-2"
+                      />
+                    </div>
+                  </div>
+
+                  {paymentSteps?.length > 0 && (
+                    <div className="bg-gray-50 p-4 rounded border text-sm text-gray-700 space-y-2">
+                      <div className="mb-2 font-semibold text-gray-800">
+                        Payment Instructions
+                      </div>
+                      <ol className="list-decimal list-inside space-y-1">
+                        {paymentSteps.map((blk, i) => (
+                          <li key={i}>{blk.children?.[0]?.text}</li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full bg-primary-blue text-white font-semibold py-3 rounded-md hover:bg-blue-700 transition"
+                    >
+                      {isSubmitting ? "Submitting..." : "Submit Order"}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </Dialog.Panel>
+          </Transition.Child>
         </div>
       </Dialog>
     </Transition>

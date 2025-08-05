@@ -1,46 +1,28 @@
-// schemas/order.ts
 export default {
   name: "order",
   title: "Orders",
   type: "document",
   fields: [
+    { name: "part", type: "reference", to: [{ type: "sparePart" }], validation: Rule => Rule.required() },
+    { name: "customerName", type: "string" },
+    { name: "contact", type: "string", validation: Rule => Rule.required() },
+    { name: "quantity", type: "number", initialValue: 1, validation: Rule => Rule.min(1).max(99) },
+    { name: "location", type: "text" },
+    { name: "paymentToken", title: "Payment Token", type: "string" }, // NEW
     {
-      name: "part",
-      title: "Ordered Part",
-      type: "reference",
-      to: [{ type: "sparePart" }],
-      validation: (Rule) => Rule.required(),
-    },
-    {
-      name: "customerName",
-      title: "Customer Name",
+      name: "paymentStatus",
+      title: "Payment Status",
       type: "string",
+      options: { list: ["pending", "approved", "rejected"], layout: "radio" },
+      initialValue: "pending"
     },
     {
-      name: "contact",
-      title: "Phone or Email",
+      name: "status",
+      title: "Order Status",
       type: "string",
-      validation: (Rule) => Rule.required().error("Contact info is required"),
+      options: { list: ["processing", "dispatched", "cancelled"], layout: "radio" },
+      initialValue: "processing"
     },
-    {
-      name: "quantity",
-      title: "Quantity",
-      type: "number",
-      initialValue: 1,
-      validation: (Rule) => Rule.min(1).max(99),
-    },
-   {
-  name: "location",
-  title: "Location",
-  type: "text",
-},
-
-    {
-      name: "createdAt",
-      title: "Created At",
-      type: "datetime",
-      initialValue: () => new Date().toISOString(),
-      readOnly: true,
-    },
-  ],
+    { name: "createdAt", type: "datetime", initialValue: () => new Date().toISOString(), readOnly: true }
+  ]
 };

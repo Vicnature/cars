@@ -1,4 +1,5 @@
 "use client";
+import { signIn } from "next-auth/react";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -25,9 +26,21 @@ export default function SignupPage() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Signup failed");
+if (!res.ok) throw new Error(data.message || "Signup failed");
 
-      router.push("/login");
+// Automatically sign in the user
+const login = await signIn("credentials", {
+  redirect: false,
+  email: form.email,
+  password: form.password,
+});
+
+if (login?.error) {
+  throw new Error("Signup succeeded but auto-login failed.");
+}
+
+router.push("/dashboard");
+
     } catch (err: any) {
       setError(err.message);
     } finally {

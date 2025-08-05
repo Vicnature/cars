@@ -10,7 +10,7 @@ const handler = NextAuth({
       credentials: {
         email: {},
         password: {},
-      },
+      },  
       async authorize(credentials) {
         const user = await writeClient.fetch(
           `*[_type == "user" && email == $email][0]`,
