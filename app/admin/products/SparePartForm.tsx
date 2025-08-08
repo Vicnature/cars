@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import {uploadImageToSanity} from "@/utils/uploadImageToSanity";
 
 interface SparePart {
   _id: string;
@@ -29,7 +30,6 @@ function slugify(text: string): string {
 export default function SparePartForm() {
   const [form, setForm] = useState({
     title: "",
-    slug: "",
     description: "",
     price: "",
     brandId: "",
@@ -38,6 +38,8 @@ export default function SparePartForm() {
     year: "",
     inStock: true,
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const [flash, setFlash] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -53,19 +55,16 @@ export default function SparePartForm() {
     const data = await res.json();
     setBrands(data.brands || []);
   };
-
   const fetchCategories = async () => {
     const res = await fetch("/api/categories/list");
     const data = await res.json();
     setCategories(data.categories || []);
   };
-
   const fetchModels = async () => {
     const res = await fetch("/api/models/list");
     const data = await res.json();
     setModels(data.models || []);
   };
-
   const fetchSpareParts = async () => {
     const res = await fetch("/api/spareParts/list");
     const data = await res.json();
@@ -80,12 +79,21 @@ export default function SparePartForm() {
   }, []);
 
   // ---- FORM ACTIONS ----
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
+  setFlash("");
+
+  try {
+    let uploadedImage = null;
+
+    if (imageFile) {
+      uploadedImage = await uploadImageToSanity(imageFile);
+    }
 
     const payload = {
       title: form.title,
-      slug: form.slug || slugify(form.title),
+      slug: slugify(form.title),
       brandId: form.brandId,
       modelId: form.modelId,
       categoryId: form.categoryId,
@@ -93,6 +101,7 @@ export default function SparePartForm() {
       price: form.price ? Number(form.price) : undefined,
       inStock: form.inStock,
       description: form.description,
+      image: uploadedImage, // now a proper Sanity image ref
     };
 
     const res = await fetch("/api/spareParts/create", {
@@ -110,67 +119,18 @@ export default function SparePartForm() {
     } else {
       setFlash(`❌ ${data.message}`);
     }
-  };
+  } catch (err) {
+    console.error(err);
+    setFlash("❌ Error saving spare part");
+  } finally {
+    setLoading(false);
+  }
+};
 
-  const handleUpdate = async () => {
-    if (!editingId) return;
-
-    const payload = {
-      id: editingId,
-      title: form.title,
-      slug: form.slug || slugify(form.title),
-      description: form.description,
-      price: form.price ? Number(form.price) : undefined,
-      brandId: form.brandId,
-      categoryId: form.categoryId,
-      modelId: form.modelId,
-      year: form.year,
-      inStock: form.inStock,
-    };
-
-    const res = await fetch("/api/spareParts/update", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    const data = await res.json();
-
-    if (res.ok) {
-      setFlash("✅ Spare part updated");
-      resetForm();
-      fetchSpareParts();
-    } else {
-      setFlash(`❌ ${data.message}`);
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this spare part?")) return;
-    await fetch(`/api/spareParts/delete?id=${id}`, { method: "DELETE" });
-    fetchSpareParts();
-  };
-
-  const handleEdit = (sp: SparePart) => {
-    setForm({
-      title: sp.title,
-      slug: slugify(sp.title),
-      description: sp.description || "",
-      price: sp.price ? String(sp.price) : "",
-      brandId: sp.brand?._id || "",
-      categoryId: sp.category?._id || "",
-      modelId: sp.model?._id || "",
-      year: "",
-      inStock: true,
-    });
-    setEditingId(sp._id);
-    setFlash("");
-  };
 
   const resetForm = () => {
     setForm({
       title: "",
-      slug: "",
       description: "",
       price: "",
       brandId: "",
@@ -179,6 +139,7 @@ export default function SparePartForm() {
       year: "",
       inStock: true,
     });
+    setImageFile(null);
     setEditingId(null);
   };
 
@@ -189,95 +150,113 @@ export default function SparePartForm() {
       {flash && <p className="text-sm text-blue-700">{flash}</p>}
 
       <form
-        onSubmit={
-          editingId
-            ? (e) => {
-                e.preventDefault();
-                handleUpdate();
-              }
-            : handleSubmit
-        }
-        className="grid grid-cols-1 sm:grid-cols-2 gap-2"
+        onSubmit={handleSubmit}
+        className="grid grid-cols-1 sm:grid-cols-2 gap-4"
       >
-        <input
-          value={form.title}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              title: e.target.value,
-              slug: slugify(e.target.value),
-            })
-          }
-          placeholder="Spare Part Title"
-          className="border p-2 rounded"
-        />
-        <input
-          value={form.slug}
-          onChange={(e) => setForm({ ...form, slug: slugify(e.target.value) })}
-          placeholder="Slug"
-          className="border p-2 rounded"
-        />
-        <input
-          value={form.price}
-          onChange={(e) => setForm({ ...form, price: e.target.value })}
-          placeholder="Price (KES)"
-          type="number"
-          className="border p-2 rounded"
-        />
-        <select
-          value={form.brandId}
-          onChange={(e) => setForm({ ...form, brandId: e.target.value })}
-          className="border p-2 rounded"
-        >
-          <option value="">Select Brand</option>
-          {brands.map((b) => (
-            <option key={b._id} value={b._id}>
-              {b.name}
-            </option>
-          ))}
-        </select>
-        <select
-          value={form.categoryId}
-          onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
-          className="border p-2 rounded"
-        >
-          <option value="">Select Category</option>
-          {categories.map((c) => (
-            <option key={c._id} value={c._id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-        <select
-          value={form.modelId}
-          onChange={(e) => setForm({ ...form, modelId: e.target.value })}
-          className="border p-2 rounded"
-        >
-          <option value="">Select Car Model</option>
-          {models.map((m) => (
-            <option key={m._id} value={m._id}>
-              {m.name}
-            </option>
-          ))}
-        </select>
-        <input
-          value={form.year}
-          onChange={(e) => setForm({ ...form, year: e.target.value })}
-          placeholder="Year Compatibility"
-          className="border p-2 rounded"
-        />
-        <textarea
-          value={form.description}
-          onChange={(e) => setForm({ ...form, description: e.target.value })}
-          placeholder="Description"
-          className="border p-2 rounded col-span-1 sm:col-span-2"
-        />
+        <label>
+          Title
+          <input
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+            className="border p-2 rounded w-full"
+            required
+          />
+        </label>
+
+        <label>
+          Price (KES)
+          <input
+            value={form.price}
+            onChange={(e) => setForm({ ...form, price: e.target.value })}
+            type="number"
+            className="border p-2 rounded w-full"
+          />
+        </label>
+
+        <label>
+          Brand
+          <select
+            value={form.brandId}
+            onChange={(e) => setForm({ ...form, brandId: e.target.value })}
+            className="border p-2 rounded w-full"
+          >
+            <option value="">Select Brand</option>
+            {brands.map((b) => (
+              <option key={b._id} value={b._id}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label>
+          Category
+          <select
+            value={form.categoryId}
+            onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
+            className="border p-2 rounded w-full"
+          >
+            <option value="">Select Category</option>
+            {categories.map((c) => (
+              <option key={c._id} value={c._id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label>
+          Car Model
+          <select
+            value={form.modelId}
+            onChange={(e) => setForm({ ...form, modelId: e.target.value })}
+            className="border p-2 rounded w-full"
+          >
+            <option value="">Select Model</option>
+            {models.map((m) => (
+              <option key={m._id} value={m._id}>
+                {m.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label>
+          Year Compatibility
+          <input
+            value={form.year}
+            onChange={(e) => setForm({ ...form, year: e.target.value })}
+            className="border p-2 rounded w-full"
+          />
+        </label>
+
+        <label className="col-span-1 sm:col-span-2">
+          Description
+          <textarea
+            value={form.description}
+            onChange={(e) =>
+              setForm({ ...form, description: e.target.value })
+            }
+            className="border p-2 rounded w-full"
+          />
+        </label>
+
+        <label className="col-span-1 sm:col-span-2">
+          Image
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+            className="border p-2 rounded w-full"
+          />
+        </label>
 
         <button
           type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded col-span-1 sm:col-span-2"
+          className="bg-blue-600 text-white px-4 py-2 rounded col-span-1 sm:col-span-2 flex justify-center items-center"
+          disabled={loading}
         >
-          {editingId ? "Update Spare Part" : "Add Spare Part"}
+          {loading ? "⏳ Saving..." : "Add Spare Part"}
         </button>
       </form>
 
@@ -301,20 +280,6 @@ export default function SparePartForm() {
                   className="h-12 mt-1"
                 />
               )}
-            </div>
-            <div className="space-x-2">
-              <button
-                onClick={() => handleEdit(sp)}
-                className="text-blue-600 hover:underline text-sm"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(sp._id)}
-                className="text-red-600 hover:underline text-sm"
-              >
-                Delete
-              </button>
             </div>
           </li>
         ))}

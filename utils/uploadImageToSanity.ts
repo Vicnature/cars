@@ -3,6 +3,7 @@
 import { writeClient } from "@/lib/sanity.write";
 
 export async function uploadImageToSanity(file: File) {
+  console.log('uploading image');
 	const buffer = await file.arrayBuffer();
 	const bytes = new Uint8Array(buffer);
 
