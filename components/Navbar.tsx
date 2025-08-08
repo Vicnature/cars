@@ -17,7 +17,7 @@ const Navbar = () => {
     <header className="w-full z-20 shadow bg-white dark:bg-gray-900 sticky top-0">
       <nav className="max-w-7xl mx-auto px-6 sm:px-10 py-4 flex justify-between items-center">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
+        {/* <Link href="/" className="flex items-center gap-2">
           <Image
             src="/logo.svg"
             alt="Garage Ke Logo"
@@ -25,20 +25,20 @@ const Navbar = () => {
             height={30}
             className="object-contain"
           />
-        </Link>
+        </Link> */}
 
         {/* Navigation Links */}
         <ul className="hidden md:flex gap-6 items-center text-sm font-medium text-gray-600 dark:text-gray-200">
-          <li>
+          {isCustomer && (
+            <>
+            <li>
             <Link
               href="/"
               className={pathname === "/" ? "text-blue-600" : ""}
             >
-              Home
+              Browse Parts
             </Link>
           </li>
-
-          {isCustomer && (
             <li>
               <Link
                 href="/my-orders"
@@ -47,10 +47,19 @@ const Navbar = () => {
                 My Orders
               </Link>
             </li>
+            </>
           )}
 
           {isAdmin && (
             <>
+              <li>
+                <Link
+                  href="/admin/products"
+                  className={pathname.includes("admin/products") ? "text-blue-600" : ""}
+                >
+                  Products
+                </Link>
+              </li>
               <li>
                 <Link
                   href="/admin/orders"
@@ -81,6 +90,14 @@ const Navbar = () => {
                   className={pathname.includes("admin/paymentInstructions") ? "text-blue-600" : ""}
                 >
                   Payment Instructions
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/admin/reports"
+                  className={pathname.includes("admin/reports") ? "text-blue-600" : ""}
+                >
+                  Reports
                 </Link>
               </li>
             </>
