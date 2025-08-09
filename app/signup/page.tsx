@@ -1,5 +1,5 @@
 "use client";
-import { signIn } from "next-auth/react";
+import { signIn,getSession } from "next-auth/react";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -13,40 +13,54 @@ export default function SignupPage() {
   const handleChange = (e: any) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleSubmit = async (e: any) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError("");
+  setLoading(true);
 
-    try {
-      const res = await fetch("/api/register", {
-        method: "POST",
-        body: JSON.stringify(form),
-        headers: { "Content-Type": "application/json" },
-      });
+  try {
+    const res = await fetch("/api/register", {
+      method: "POST",
+      body: JSON.stringify(form),
+      headers: { "Content-Type": "application/json" },
+    });
 
-      const data = await res.json();
-if (!res.ok) throw new Error(data.message || "Signup failed");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Signup failed");
 
-// Automatically sign in the user
-const login = await signIn("credentials", {
-  redirect: false,
-  email: form.email,
-  password: form.password,
-});
+    // Automatically sign in the user (no redirect)
+    const login = await signIn("credentials", {
+      redirect: false,
+      email: form.email,
+      password: form.password,
+    });
 
-if (login?.error) {
-  throw new Error("Signup succeeded but auto-login failed.");
-}
-
-router.push("/dashboard");
-
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    if (login?.error) {
+      throw new Error("Signup succeeded but auto-login failed.");
     }
-  };
+
+    // Get the updated session to read the user role
+    const session = await getSession();
+
+    if (!session) {
+      throw new Error("Failed to get session after login.");
+    }
+
+    // Redirect based on role
+    if (session.user?.role === "admin") {
+      router.push("/admin/dashboard");
+    } else if (session.user?.role === "customer") {
+      router.push("/browse");
+    } else {
+      // fallback redirect
+      router.push("/browse");
+    }
+  } catch (err: any) {
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-8">

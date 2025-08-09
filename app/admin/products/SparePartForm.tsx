@@ -146,7 +146,7 @@ export default function SparePartForm() {
 
 	return (
 		<div className="p-6 max-w-4xl mx-auto space-y-6">
-			<h2 className="text-2xl font-semibold">🔧 Manage Spare Parts</h2>
+			<h2 className="text-2xl font-semibold">Manage Spare Parts</h2>
 
 			{flash && <p className="text-sm text-blue-700">{flash}</p>}
 

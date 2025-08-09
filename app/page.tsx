@@ -2,13 +2,31 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+
 import { fetchSpareParts } from "@/utils/fetchSpareParts";
 import PartCard from "@/components/PartCard";
 import CustomButton from "@/components/CustomButton";
 
 export default function LandingPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
   const [parts, setParts] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  // Redirect logic based on user role once session is loaded
+  useEffect(() => {
+    if (status === "loading") return; // wait for session loading
+
+    if (session?.user?.role === "admin") {
+      router.replace("/admin/dashboard");
+    } else if (session?.user?.role === "customer") {
+      router.replace("/browse");
+    }
+    // If no session or unknown role, stay on landing page
+  }, [session, status, router]);
 
   const getSampleParts = async () => {
     setLoading(true);
@@ -25,6 +43,17 @@ export default function LandingPage() {
   useEffect(() => {
     getSampleParts();
   }, []);
+
+  // Optional: while redirecting, render nothing or a loader
+  if (status === "loading") {
+    return (
+      <main className="overflow-hidden flex justify-center items-center min-h-screen">
+        <p>Loading...</p>
+      </main>
+    );
+  }
+
+  // If redirected, component unmounts so no need to handle that here
 
   return (
     <main className="overflow-hidden">
@@ -45,7 +74,7 @@ export default function LandingPage() {
               containerStyles="bg-white text-blue-700 px-6 py-3 rounded-md font-bold hover:bg-gray-100"
             />
           </Link>
-          <Link href="/register">
+          <Link href="/signup">
             <CustomButton
               title="Sign Up"
               containerStyles="bg-yellow-400 text-gray-900 px-6 py-3 rounded-md font-bold hover:bg-yellow-500"
@@ -80,8 +109,6 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-
-     
     </main>
   );
 }
