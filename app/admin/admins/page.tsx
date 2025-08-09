@@ -37,12 +37,12 @@ export default function ManageAdmins() {
 		});
 
 		if (res.ok) {
-			setFlash("✅ Admin created");
+			setFlash("Success: Admin created");
 			setForm({ name: "", email: "", password: "" });
 			fetchAdmins();
 		} else {
 			const err = await res.json();
-			setFlash("❌ " + (err.message || "Failed to create admin"));
+			setFlash("Error " + (err.message || "Failed to create admin"));
 		}
 		setIsCreating(false);
 	};

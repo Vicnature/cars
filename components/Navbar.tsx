@@ -54,6 +54,14 @@ const Navbar = () => {
             <>
               <li>
                 <Link
+                  href="/admin/dashboard"
+                  className={pathname.includes("admin/products") ? "text-blue-600" : ""}
+                >
+                  Dashboard
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/admin/products"
                   className={pathname.includes("admin/products") ? "text-blue-600" : ""}
                 >

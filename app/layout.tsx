@@ -1,28 +1,30 @@
+/** @format */
+
 import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import Providers from "@/components/Providers"; // ✅ new wrapper
+import Providers from "@/components/Providers"; // Success: new wrapper
 
 export const metadata: Metadata = {
-  title: "Garage Ke",
-  description: "Let's Engineer your car today",
+	title: "Garage Ke",
+	description: "Let's Engineer your car today",
 };
 
 export default function RootLayout({
-  children,
+	children,
 }: {
-  children: React.ReactNode;
+	children: React.ReactNode;
 }) {
-  return (
-    <html lang="en">
-      <body className="relative">
-        <Providers>
-          <Navbar />
-          {children}
-          <Footer />
-        </Providers>
-      </body>
-    </html>
-  );
+	return (
+		<html lang="en">
+			<body className="relative">
+				<Providers>
+					<Navbar />
+					{children}
+					<Footer />
+				</Providers>
+			</body>
+		</html>
+	);
 }

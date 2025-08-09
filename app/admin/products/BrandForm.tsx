@@ -1,3 +1,5 @@
+/** @format */
+
 "use client";
 import { useEffect, useState } from "react";
 
@@ -21,7 +23,8 @@ export default function BrandForm() {
 		if (!name.trim()) return;
 
 		const method = editingId ? "PUT" : "POST";
-		const url = editingId ? `/api/brands/update?id=${editingId}` : "/api/brands/create";
+		const url =
+			editingId ? `/api/brands/update?id=${editingId}` : "/api/brands/create";
 
 		const res = await fetch(url, {
 			method,
@@ -30,12 +33,12 @@ export default function BrandForm() {
 		});
 
 		if (res.ok) {
-			setFlash("✅ Saved");
+			setFlash("Success: Saved");
 			setName("");
 			setEditingId(null);
 			fetchBrands();
 		} else {
-			setFlash("❌ Error saving");
+			setFlash("Error saving");
 		}
 	};
 

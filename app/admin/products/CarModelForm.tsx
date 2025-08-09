@@ -39,7 +39,7 @@ export default function ManageModels() {
 
 		const payload = {
 			name: form.name,
-			brand: form.brandId, // ✅ Aligns with backend
+			brand: form.brandId, // Success: Aligns with backend
 			year: parseInt(form.year),
 		};
 
@@ -50,12 +50,12 @@ export default function ManageModels() {
 		});
 
 		if (res.ok) {
-			setFlash("✅ Model created");
+			setFlash("Success: Model created");
 			setForm({ name: "", brandId: "", year: "" });
 			fetchModels();
 		} else {
 			const err = await res.json();
-			setFlash("❌ " + (err.message || "Failed to create model"));
+			setFlash("Error: " + (err.message || "Failed to create model"));
 		}
 
 		setIsCreating(false);
@@ -82,7 +82,7 @@ export default function ManageModels() {
 		const payload = {
 			id,
 			name: form.name,
-			brand: form.brandId, // ✅ Aligns with backend
+			brand: form.brandId, // Success: Aligns with backend
 			year: parseInt(form.year),
 		};
 
@@ -93,7 +93,7 @@ export default function ManageModels() {
 		});
 
 		setLoadingId(null);
-		setFlash("✅ Model updated");
+		setFlash("Success: Model updated");
 		setEditingId(null);
 		setForm({ name: "", brandId: "", year: "" });
 		fetchModels();
@@ -113,14 +113,14 @@ export default function ManageModels() {
 
 			if (res.ok) {
 				setModels((prev) => prev.filter((m) => m._id !== id));
-				setFlash("✅ Model deleted");
+				setFlash("Success: Model deleted");
 			} else {
 				const err = await res.json();
-				setFlash("❌ " + (err.message || "Delete failed"));
+				setFlash("Error " + (err.message || "Delete failed"));
 			}
 		} catch (error) {
 			console.error("Unexpected delete error:", error);
-			setFlash("❌ Unexpected error during delete.");
+			setFlash("Error Unexpected error during delete.");
 		} finally {
 			setLoadingId(null);
 		}
@@ -128,7 +128,7 @@ export default function ManageModels() {
 
 	return (
 		<div className="p-8 max-w-3xl mx-auto space-y-6">
-			<h1 className="text-3xl font-bold">🚗 Car Model Management</h1>
+			<h1 className="text-3xl font-bold"> Car Model Management</h1>
 
 			{flash && (
 				<p className="bg-blue-100 text-blue-800 px-4 py-2 rounded">{flash}</p>

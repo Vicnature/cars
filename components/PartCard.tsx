@@ -57,7 +57,7 @@ const PartCard = ({ part }: PartCardProps) => {
           <div>
             <p className="text-sm text-gray-500">Price</p>
             <p className="text-xl font-bold text-primary-blue">
-              KES {price.toLocaleString()}
+              KES {price?.toLocaleString()}
             </p>
           </div>
           <div className={`text-sm font-medium ${inStock ? "text-green-600" : "text-red-500"}`}>

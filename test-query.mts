@@ -23,5 +23,5 @@ const query = `
 `
 
 client.fetch(query)
-  .then(data => console.log('🧩 Parts found:', data))
-  .catch(err => console.error('❌ Query failed:', err.message))
+  .then(data => console.log(' Parts found:', data))
+  .catch(err => console.error(' Query failed:', err.message))
