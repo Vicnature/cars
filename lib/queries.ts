@@ -1,13 +1,16 @@
+/** @format */
+
 export const sparePartsQuery = (filters = {}) => {
-  const { category, model, minPrice, maxPrice } = filters;
-  let query = `*[_type == "sparePart"`;
+	const { title, category, model, priceMin, priceMax } = filters;
+	let query = `*[_type == "sparePart"`;
 
-  if (category) query += ` && category->name == "${category}"`;
-  if (model) query += ` && model->name == "${model}"`;
-  if (minPrice) query += ` && price >= ${minPrice}`;
-  if (maxPrice) query += ` && price <= ${maxPrice}`;
+	if (category) query += ` && category->name == "${category}"`;
+	if (model) query += ` && model->name == "${model}"`;
+	if (priceMin) query += ` && price >= ${priceMin}`;
+	if (priceMax) query += ` && price <= ${priceMax}`;
+	if (title) query += ` && title match "*${title}*"`;
 
-  query += `] | order(_createdAt desc){
+	query += `] | order(_createdAt desc){
     _id,
     title,
     description,
@@ -19,5 +22,5 @@ export const sparePartsQuery = (filters = {}) => {
     "images": images[].asset->url
   }`;
 
-  return query;
+	return query;
 };

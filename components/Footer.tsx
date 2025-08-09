@@ -96,8 +96,8 @@ const Footer = () => {
 			<div className="flex justify-between items-center flex-wrap mt-10 border-t border-gray-100 sm:px-16 px-6 py-10 text-sm text-gray-500 dark:text-gray-400">
 				<p>@2025 Garage Ke. All rights reserved.</p>
 				<div className="flex gap-4">
-					<Link href="/privacy-policy">Privacy Policy</Link>
-					<Link href="/terms-of-use">Terms of Use</Link>
+					{/* <Link href="/privacy-policy">Privacy Policy</Link> */}
+					{/* <Link href="/terms-of-use">Terms of Use</Link> */}
 				</div>
 			</div>
 		</footer>

@@ -54,13 +54,13 @@ export default function AdminUsers() {
 
   return (
     <div className="p-8 max-w-5xl mx-auto space-y-6">
-      <h1 className="text-3xl font-bold">👥 Customer Management</h1>
+      <h1 className="text-3xl font-bold">Customer Management</h1>
 
       <div className="overflow-x-auto shadow-lg border rounded-lg">
         <table className="min-w-full bg-white">
           <thead className="bg-gray-100">
             <tr>
-              {["#", "Name", "Email", "Orders", "Actions"].map(h => (
+              {["#", "Name", "Email","Actions"].map(h => (
                 <th key={h} className="py-3 px-4 text-left text-sm font-semibold text-gray-600">
                   {h}
                 </th>
@@ -98,14 +98,14 @@ export default function AdminUsers() {
                   )}
                 </td>
 
-                <td className="py-3 px-4">
-                  <Link
-                    href={`/admin/users/${u._id}`}
-                    className="text-blue-600 hover:underline text-sm"
-                  >
-                    View Orders
-                  </Link>
-                </td>
+                  {/* <td className="py-3 px-4">
+                    <Link
+                      href={`/admin/users/${u._id}`}
+                      className="text-blue-600 hover:underline text-sm"
+                    >
+                      View Orders
+                    </Link>
+                  </td> */}
 
                 <td className="py-3 px-4 space-x-2">
                   {editingId === u._id ? (
